@@ -108,9 +108,9 @@ def get_episode_info(movie):
 
 # 保存各集数据
 def save_data(episodes):
-    save_path = ".Save/" +  movie['title'] + ' Episodes.csv' # 保存路径: .Save/Doctor Who (Series 2005) Episodes.csv
+    save_path = ".Save/" +'[IMDB] '+  movie['title'] + ' Episodes.csv' # 保存路径: .Save/Doctor Who (Series 2005) Episodes.csv
     if not os.path.exists(save_path):
-        with open(save_path, 'w', encoding='utf-8') as f:
+        with open(save_path, 'w', encoding='utf-8', newline='') as f:
             writer = csv.DictWriter(f, fieldnames=['season', 'ep', 'name', 'date', 'rating'])
             writer.writeheader()
             writer.writerows(episodes)
