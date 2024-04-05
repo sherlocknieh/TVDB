@@ -6,18 +6,17 @@ import csv
 
 domain = 'https://www.imdb.com'
 
-# 下载并解析网页
+# 网页下载解析
 def get_html(url,save_name):
     headers = { 'User-Agent':
                 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)\
                  AppleWebKit/537.36 (KHTML, like Gecko)\
                  Chrome/122.0.0.0 Safari/537.36 Edg/122.0.0.0' }
-    
-    os.mkdir('cache') if not os.path.exists('cache') else None
-    filepath = 'cache/'+ '[IMDB]' + save_name
+    dir_name = '.Cache'
+    os.mkdir(dir_name) if not os.path.exists(dir_name) else None
+    filepath = dir_name + '/[IMDB] ' + save_name
 
     if not os.path.exists(filepath):
-        print("下载中...")
         response = requests.get(url, headers=headers, timeout=10)
         if response.status_code != 200:
             print('下载失败')
@@ -30,28 +29,25 @@ def get_html(url,save_name):
 
 # 搜索影片
 def search_movie(search_name):
-    # 下载搜索结果页
-    if not search_name:
-        search_name = 'Doctor Who'
-    url = 'https://www.imdb.com/find/?s=tt&q=' + search_name
-    soup = get_html(url, f'{search_name} search result.html')
-    # 提取前10个搜索结果
-    result_area = soup.select('.ipc-metadata-list-summary-item__tc')
+
+    url = domain + '/find/?s=tt&q=' + search_name
+    soup = get_html(url, f'{search_name} Search Result.html')       # 下载搜索结果页面
+    result_area = soup.select('.ipc-metadata-list-summary-item__tc')    # 提取前10个搜索结果
     result_list = []
     for item in result_area[:10]:
-        # 提取片名
-        name = item.a.get_text()
-        # 提取tt号和链接
-        tt = item.a['href'].split('/')[2]
+
+        name = item.a.get_text()        # 提取片名
+
+        tt = item.a['href'].split('/')[2]        # 提取tt号和链接
         url = domain + '/title/' + tt
-        # 提取类型
-        type_ = item.find('span',string=re.compile('Series'))
+
+        type_ = item.find('span',string=re.compile('Series'))        # 提取类型
         if type_:
             type_ = type_.get_text()
         else:
             type_ = 'Movie'
-        # 提取年份
-        year = item.find('span',string=re.compile(r'\d{4}'))
+
+        year = item.find('span',string=re.compile(r'\d{4}'))        # 提取年份
         if year:
             year = year.get_text()
         else:
@@ -63,9 +59,9 @@ def search_movie(search_name):
     return result_list
 
 # 选择影片
-def choose_movie(result_list):
+def get_movie(result_list):
     Number = 1
-    print('找到以下影片:\n')
+    print('搜索结果:\n')
     for item in result_list:
         print(f'{Number}. {item["title"]}')
         Number += 1
@@ -91,42 +87,70 @@ def get_episode_info(movie):
     if movie['type'] == 'Movie':
         return
     url = movie['url'] + '/episodes'
-    save_name = movie['name'] + ' seasons.html'
+    save_name = movie['name'] + ' Seasons.html'
     soup = get_html(url, save_name)
     # 获取季数
     season_list = soup.select('ul[role=tablist]')[1].select('a')
-    season_list = [{'number':item.get_text(), 'url':domain+item['href']} for item in season_list]
+    season_list = [{'season_id':item.get_text(), 'url':domain+item['href']} for item in season_list]
     print(f'共 {len(season_list)} 季')
     # 获取各集评分
-    episodes_data = []
+    episodes = []
     for item in season_list:
-        soup = get_html(item['url'], f'{movie["name"]} season {item["number"]}.html')
-        episode_list = soup.select_one('section.sc-7b9ed960-0.jNjsLo').select('div.sc-f2169d65-4.kDAvos')
+        print(f'第 {item['season_id']} 季')
+        soup = get_html(item['url'], f'{movie["name"]} Season {item['season_id']}.html')
+        episode_list = soup.select_one('section.sc-7b9ed960-0.jNjsLo')
         for episode in episode_list:
-            episode_title = episode.select_one('a').get_text()
-            episode_date = episode.select_one('span.sc-f2169d65-10.iZXnmI').get_text()
-            episode_rating = episode.select_one('span[data-testid="ratingGroup--imdb-rating"]').get_text()
-            episodes_data.append({'title':episode_title, 'date':episode_date, 'rating':episode_rating.split('/')[0]})
-            print(f'{episode_title} {episode_date} {episode_rating.split("/")[0]}')
-    return episodes_data
+            episode_title = episode.h4.select_one('a').get_text() # S1.E1 ∙ Yesterday's Jam
+            if item['season_id'] == 'Unknown':
+                season_number = '0'
+                episode_number = '0'
+                episode_name = '"' + episode_title + '"'
+            else:
+                season_number = episode_title.split(' ∙ ')[0].split('.')[0] # 季数 S1
+                episode_number = episode_title.split(' ∙ ')[0].split('.')[1] # 集数 E1
+                episode_name = '"' + episode_title.split(' ∙ ')[1] + '"' # 集名(带引号) "Yesterday's Jam"
+            episode_date = list(episode.h4.parent.stripped_strings)[1] # 日期: Sat, Oct 7, 2018
+            episode_date = date_format(episode_date) # 格式化日期: 2018-10-07
+            episode_rating = episode.select_one('span.ipc-rating-star').get_text() # 评分信息 8.5/10(1.5k)
+            episode_rating = episode_rating.split('/')[0] # 只保留评分: 8.5
+            print(f'{season_number} {episode_number} {episode_name} ({episode_date}) 评分: {episode_rating}')
+            episodes.append({ 'season':season_number, 'ep':episode_number , 'name':episode_name, 'date':episode_date, 'rating':episode_rating})
+    return episodes
 
+# 保存各集数据
+def save_data(episodes):
+    save_path = ".Save/" +  movie['title'] + ' Episodes.csv'
+    if not os.path.exists(save_path):
+        with open(save_path, 'w', encoding='utf-8') as f:
+            writer = csv.DictWriter(f, fieldnames=['season', 'ep', 'name', 'date', 'rating'])
+            writer.writeheader()
+            writer.writerows(episodes)
+    print('数据已保存到 csv 文件')
+
+# 格式化日期
 def date_format(date):
     # 原始格式: Sat, Oct 7, 2018
     # 目标格式: 2018-10-07
     month_dict = {'Jan':'01', 'Feb':'02', 'Mar':'03', 'Apr':'04', 'May':'05', 'Jun':'06',
                   'Jul':'07', 'Aug':'08', 'Sep':'09', 'Oct':'10', 'Nov':'11', 'Dec':'12'}
-    analyzed = re.split(r',| ', date)
+
+    data = date.strip().replace(',', '') # 去除前后空白字符(换行符之类的), 替换逗号为空格
+    list = data.split(' ') # 分割字符串 ['Sat', 'Oct', '7', '2018']
+
+    month = month_dict[list[1]]
+    day = list[2].zfill(2)
+    year = list[3]
+
+    return f'{year}-{month}-{day}'
+
 
 if __name__ == '__main__':
 
-    search_result = search_movie(input('输入片名: ')) # 搜索影片
-    chosen_movie  = choose_movie(search_result) # 选择影片
-    episodes_data = get_episode_info(chosen_movie) # 获取各集信息
-    if not os.path.exists('episodes.csv'):
-        with open('episodes.csv', 'w', encoding='utf-8') as f:
-            writer = csv.DictWriter(f, fieldnames=['title', 'date', 'rating'])
-            writer.writeheader()
-            writer.writerows(episodes_data)
-    
-    input()
+    search_name = input('输入搜索关键词: ')
+    if not search_name: search_name = 'Doctor Who'
+    search_result = search_movie(search_name) # 搜索影片
+    movie  = get_movie(search_result) # 选择影片
+    if movie['type'] == 'Movie': exit()
+    episodes = get_episode_info(movie) # 获取各集信息
+    save_data(episodes) # 保存数据
 
