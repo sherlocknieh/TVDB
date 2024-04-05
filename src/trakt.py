@@ -83,11 +83,10 @@ def get_episodes(selection):
 
 def save_episodes(selection,episodes):
     save_path = '.Save'+ '/[Trakt] '+ selection['title'] + ' Episodes.csv' # 保存路径: .Save/[Trakt] Doctor Who (Series 2005) Episodes.csv
-    if not os.path.exists(save_path):
-        with open(save_path, 'w', encoding='utf-8', newline='') as f:
-            writer = csv.DictWriter(f, fieldnames=episodes[0].keys())
-            writer.writeheader()
-            writer.writerows(episodes)
+    with open(save_path, 'w', encoding='utf-8', newline='') as f:
+        writer = csv.DictWriter(f, fieldnames=episodes[0].keys())
+        writer.writeheader()
+        writer.writerows(episodes)
 
 if __name__ == '__main__':
     search_name = input('输入搜索关键词: ')

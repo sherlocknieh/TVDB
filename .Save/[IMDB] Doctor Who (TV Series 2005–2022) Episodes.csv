@@ -1,0 +1,176 @@
+season,ep,name,date,rating
+01,01,"""Rose""",2006-02-19,7.5
+01,02,"""The End of the World""",2005-04-02,7.5
+01,03,"""The Unquiet Dead""",2005-04-09,7.4
+01,04,"""Aliens of London""",2005-04-16,6.9
+01,05,"""World War Three""",2005-04-23,7.0
+01,06,"""Dalek""",2005-04-30,8.6
+01,07,"""The Long Game""",2005-05-07,7.0
+01,08,"""Father's Day""",2005-05-14,8.3
+01,09,"""The Empty Child""",2005-05-21,9.0
+01,10,"""The Doctor Dances""",2005-05-28,9.0
+01,11,"""Boom Town""",2005-06-04,7.1
+01,12,"""Bad Wolf""",2005-06-11,8.6
+01,13,"""The Parting of the Ways""",2005-06-18,9.0
+02,00,"""The Christmas Invasion""",2005-12-25,8.0
+02,01,"""New Earth""",2006-04-15,7.4
+02,02,"""Tooth and Claw""",2006-04-22,7.7
+02,03,"""School Reunion""",2006-04-29,8.2
+02,04,"""The Girl in the Fireplace""",2006-05-06,9.2
+02,05,"""Rise of the Cybermen""",2006-05-13,7.7
+02,06,"""The Age of Steel""",2006-05-20,7.8
+02,07,"""The Idiot's Lantern""",2006-05-27,6.7
+02,08,"""The Impossible Planet""",2006-06-03,8.6
+02,09,"""The Satan Pit""",2006-06-10,8.7
+02,10,"""Love & Monsters""",2006-06-17,6.2
+02,11,"""Fear Her""",2006-06-24,5.8
+02,12,"""Army of Ghosts""",2006-07-01,8.4
+02,13,"""Doomsday""",2006-07-08,9.2
+03,00,"""The Runaway Bride""",2006-12-25,7.6
+03,01,"""Smith and Jones""",2007-03-31,7.9
+03,02,"""The Shakespeare Code""",2007-04-07,7.6
+03,03,"""Gridlock""",2007-04-14,8.0
+03,04,"""Daleks in Manhattan""",2007-04-21,7.0
+03,05,"""Evolution of the Daleks""",2007-04-28,6.9
+03,06,"""The Lazarus Experiment""",2007-05-05,6.5
+03,07,"""42""",2007-05-19,7.2
+03,08,"""Human Nature""",2007-05-26,8.9
+03,09,"""The Family of Blood""",2007-06-02,9.2
+03,10,"""Blink""",2007-06-09,9.8
+03,11,"""Utopia""",2007-06-16,8.7
+03,12,"""The Sound of Drums""",2007-06-23,8.7
+03,13,"""Last of the Time Lords""",2007-06-30,8.3
+04,00,"""Voyage of the Damned""",2007-12-25,7.6
+04,01,"""Partners in Crime""",2008-04-05,7.7
+04,02,"""The Fires of Pompeii""",2008-04-12,8.0
+04,03,"""Planet of the Ood""",2008-04-19,8.0
+04,04,"""The Sontaran Stratagem""",2008-04-26,7.4
+04,05,"""The Poison Sky""",2008-05-03,7.5
+04,06,"""The Doctor's Daughter""",2008-05-10,7.5
+04,07,"""The Unicorn and the Wasp""",2008-05-17,7.7
+04,08,"""Silence in the Library""",2008-05-31,9.3
+04,09,"""Forest of the Dead""",2008-06-07,9.4
+04,10,"""Midnight""",2008-06-14,9.1
+04,11,"""Turn Left""",2008-06-21,8.9
+04,12,"""The Stolen Earth""",2008-06-28,9.1
+04,13,"""Journey's End""",2008-07-05,9.2
+05,01,"""The Eleventh Hour""",2010-04-03,8.7
+05,02,"""The Beast Below""",2010-04-10,7.6
+05,03,"""Victory of the Daleks""",2010-04-17,6.6
+05,04,"""The Time of Angels""",2010-04-24,8.6
+05,05,"""Flesh and Stone""",2010-05-01,8.5
+05,06,"""The Vampires of Venice""",2010-05-08,7.0
+05,07,"""Amy's Choice""",2010-05-15,8.1
+05,08,"""The Hungry Earth""",2010-05-22,7.1
+05,09,"""Cold Blood""",2010-05-29,7.3
+05,10,"""Vincent and the Doctor""",2010-06-05,9.3
+05,11,"""The Lodger""",2010-06-12,8.0
+05,12,"""The Pandorica Opens""",2010-06-19,9.0
+05,13,"""The Big Bang""",2010-06-26,9.1
+06,00,"""A Christmas Carol""",2010-12-25,8.5
+06,01,"""The Impossible Astronaut""",2011-04-23,8.8
+06,02,"""Day of the Moon""",2011-04-30,8.8
+06,03,"""The Curse of the Black Spot""",2011-05-07,6.6
+06,04,"""The Doctor's Wife""",2011-05-14,8.9
+06,05,"""The Rebel Flesh""",2011-05-21,7.1
+06,06,"""The Almost People""",2011-05-28,7.3
+06,07,"""A Good Man Goes to War""",2011-06-04,9.0
+06,08,"""Let's Kill Hitler""",2011-08-27,7.9
+06,09,"""Night Terrors""",2011-09-03,7.0
+06,10,"""The Girl Who Waited""",2011-09-10,8.4
+06,11,"""The God Complex""",2011-09-17,8.0
+06,12,"""Closing Time""",2011-09-24,7.5
+06,13,"""The Wedding of River Song""",2011-10-01,8.4
+07,00,"""The Doctor, the Widow and the Wardrobe""",2011-12-25,7.1
+07,01,"""Asylum of the Daleks""",2012-09-01,8.5
+07,02,"""Dinosaurs on a Spaceship""",2012-09-08,7.2
+07,03,"""A Town Called Mercy""",2012-09-15,7.2
+07,04,"""The Power of Three""",2012-09-22,7.4
+07,05,"""The Angels Take Manhattan""",2012-09-29,8.9
+07,06,"""The Snowmen""",2012-12-25,8.3
+07,07,"""The Bells of Saint John""",2013-03-30,7.8
+07,08,"""The Rings of Akhaten""",2013-04-06,7.3
+07,09,"""Cold War""",2013-04-13,7.1
+07,10,"""Hide""",2013-04-20,7.6
+07,11,"""Journey to the Centre of the TARDIS""",2013-04-27,7.4
+07,12,"""The Crimson Horror""",2013-05-04,7.2
+07,13,"""Nightmare in Silver""",2013-05-11,7.2
+07,14,"""The Name of the Doctor""",2013-05-18,9.0
+08,00,"""The Time of the Doctor""",2013-12-25,8.4
+08,01,"""Deep Breath""",2014-08-23,7.8
+08,02,"""Into the Dalek""",2014-08-30,7.5
+08,03,"""Robot of Sherwood""",2014-09-06,6.9
+08,04,"""Listen""",2014-09-13,8.8
+08,05,"""Time Heist""",2014-09-20,7.8
+08,06,"""The Caretaker""",2014-09-27,7.2
+08,07,"""Kill the Moon""",2014-10-04,6.6
+08,08,"""Mummy on the Orient Express""",2014-10-11,8.4
+08,09,"""Flatline""",2014-10-18,8.3
+08,10,"""In the Forest of the Night""",2014-10-25,6.1
+08,11,"""Dark Water""",2014-11-01,8.5
+08,12,"""Death in Heaven""",2014-11-08,7.8
+09,00,"""Last Christmas""",2014-12-25,8.1
+09,01,"""The Magician's Apprentice""",2015-09-19,8.4
+09,02,"""The Witch's Familiar""",2015-09-26,8.4
+09,03,"""Under the Lake""",2015-10-03,8.1
+09,04,"""Before the Flood""",2015-10-10,8.0
+09,05,"""The Girl Who Died""",2015-10-17,7.4
+09,06,"""The Woman Who Lived""",2015-10-24,7.3
+09,07,"""The Zygon Invasion""",2015-10-31,7.7
+09,08,"""The Zygon Inversion""",2015-11-07,8.4
+09,09,"""Sleep No More""",2015-11-14,5.8
+09,10,"""Face the Raven""",2015-11-21,8.5
+09,11,"""Heaven Sent""",2015-11-28,9.6
+09,12,"""Hell Bent""",2015-12-05,8.6
+10,00,"""The Return of Doctor Mysterio""",2016-12-25,7.3
+10,01,"""The Pilot""",2017-04-15,7.8
+10,02,"""Smile""",2017-04-22,7.2
+10,03,"""Thin Ice""",2017-04-29,7.2
+10,04,"""Knock Knock""",2017-05-06,7.3
+10,05,"""Oxygen""",2017-05-13,7.9
+10,06,"""Extremis""",2017-05-20,8.3
+10,07,"""The Pyramid at the End of the World""",2017-05-27,7.6
+10,08,"""The Lie of the Land""",2017-06-03,7.1
+10,09,"""Empress of Mars""",2017-06-10,7.0
+10,10,"""The Eaters of Light""",2017-06-17,6.8
+10,11,"""World Enough and Time""",2017-06-24,9.1
+10,12,"""The Doctor Falls""",2017-07-01,9.0
+11,00,"""Twice Upon a Time""",2017-12-25,8.3
+11,01,"""The Woman Who Fell to Earth""",2018-10-07,7.0
+11,02,"""The Ghost Monument""",2018-10-14,6.1
+11,03,"""Rosa""",2018-10-21,7.1
+11,04,"""Arachnids in the UK""",2018-10-28,5.1
+11,05,"""The Tsuranga Conundrum""",2018-11-04,5.1
+11,06,"""Demons of the Punjab""",2018-11-11,6.6
+11,07,"""Kerblam!""",2018-11-18,6.3
+11,08,"""The Witchfinders""",2018-11-25,5.8
+11,09,"""It Takes You Away""",2018-12-02,6.3
+11,10,"""The Battle of Ranskoor Av Kolos""",2018-12-09,5.3
+12,01,"""Spyfall: Part One""",2020-01-01,6.7
+12,02,"""Spyfall: Part Two""",2020-01-05,6.5
+12,03,"""Orphan 55""",2020-01-12,4.2
+12,04,"""Nikola Tesla's Night of Terror""",2020-01-19,6.5
+12,05,"""Fugitive of the Judoon""",2020-01-26,7.6
+12,06,"""Praxeus""",2020-02-02,5.2
+12,07,"""Can You Hear Me?""",2020-02-09,5.7
+12,08,"""The Haunting of Villa Diodati""",2020-02-16,7.2
+12,09,"""Ascension of the Cybermen""",2020-02-23,6.6
+12,10,"""The Timeless Children""",2020-03-01,5.1
+13,01,"""Flux: Chapter One - The Halloween Apocalypse""",2021-10-31,6.7
+13,02,"""Flux: Chapter Two - War of the Sontarans""",2021-11-07,7.1
+13,03,"""Flux: Chapter Three - Once, Upon Time""",2021-11-14,6.0
+13,04,"""Flux: Chapter Four - Village of the Angels""",2021-11-21,7.7
+13,05,"""Flux: Chapter Five - Survivors of the Flux""",2021-11-28,6.2
+13,06,"""Flux: Chapter Six - The Vanquishers""",2021-12-05,5.4
+00,00,"""The Next Doctor""",2008-12-25,7.4
+00,00,"""Planet of the Dead""",2009-04-11,7.4
+00,00,"""The Waters of Mars""",2009-11-15,8.8
+00,00,"""The End of Time: Part One""",2009-12-25,8.2
+00,00,"""The End of Time: Part Two""",2010-01-01,8.9
+00,00,"""The Day of the Doctor""",2013-11-23,9.3
+00,00,"""The Husbands of River Song""",2015-12-25,8.5
+00,00,"""Resolution""",2019-01-01,6.0
+00,00,"""Revolution of the Daleks""",2021-01-01,6.1
+00,00,"""Eve of the Daleks""",2022-01-01,6.7
+00,00,"""Legend of the Sea Devils""",2022-04-17,4.6
+00,00,"""The Power of the Doctor""",2022-10-23,7.6

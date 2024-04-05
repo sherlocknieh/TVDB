@@ -109,12 +109,11 @@ def get_episode_info(movie):
 # 保存各集数据
 def save_data(episodes):
     save_path = ".Save/" +'[IMDB] '+  movie['title'] + ' Episodes.csv' # 保存路径: .Save/Doctor Who (Series 2005) Episodes.csv
-    if not os.path.exists(save_path):
-        with open(save_path, 'w', encoding='utf-8', newline='') as f:
-            writer = csv.DictWriter(f, fieldnames=['season', 'ep', 'name', 'date', 'rating'])
-            writer.writeheader()
-            writer.writerows(episodes)
-    print('数据已保存到 csv 文件')
+    with open(save_path, 'w', encoding='utf-8', newline='') as f:
+        writer = csv.DictWriter(f, fieldnames=['season', 'ep', 'name', 'date', 'rating'])
+        writer.writeheader()
+        writer.writerows(episodes)
+    print('数据已保存到 .Save 目录下的 csv 文件')
 
 # 格式化日期
 def date_format(date):
