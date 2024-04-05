@@ -99,15 +99,24 @@ def get_episode_info(movie):
                 episode_number = episode_title.split(' ∙ ')[0].split('.')[1][1:].zfill(2) # 集数 E1 -> 01
                 episode_name = '"' + episode_title.split(' ∙ ')[1] + '"' # 集名(带引号) "Yesterday's Jam"
             episode_date = list(episode.h4.parent.stripped_strings)[1] # 日期: Sat, Oct 7, 2018
-            episode_date = date_format(episode_date) # 格式化日期: 2018-10-07
-            episode_rating = episode.select_one('span.ipc-rating-star').get_text() # 评分信息 8.5/10(1.5k)
-            episode_rating = episode_rating.split('/')[0] # 只保留评分: 8.5
+            if len(episode_date) <= 8: # 日期长度小于等于8时, 说明没有日期信息
+                episode_date = 'N/A'
+            else:
+                episode_date = date_format(episode_date) # 格式化日期: 2018-10-07
+            episode_rating = episode.select_one('span.ipc-rating-star')
+            if episode_rating:
+                episode_rating = episode_rating.get_text() # 评分信息 8.5/10(1.5k)
+                episode_rating = episode_rating.split('/')[0] # 只保留评分: 8.5
+            else:
+                episode_rating = 'N/A' # 无评分信息
             print(f'S{season_number} E{episode_number} {episode_name} ({episode_date}) 评分: {episode_rating}')
             episodes.append({ 'season':season_number, 'ep':episode_number , 'name':episode_name, 'date':episode_date, 'rating':episode_rating})
     return episodes
 
 # 保存各集数据
 def save_data(episodes):
+    if not os.path.exists('.Save'):
+        os.mkdir('.Save')
     save_path = ".Save/" +'[IMDB] '+  movie['title'] + ' Episodes.csv' # 保存路径: .Save/Doctor Who (Series 2005) Episodes.csv
     with open(save_path, 'w', encoding='utf-8', newline='') as f:
         writer = csv.DictWriter(f, fieldnames=['season', 'ep', 'name', 'date', 'rating'])
