@@ -25,7 +25,7 @@ python src/imdb.py
 ```bash
 python src/trakt.py
 ```
-保存的 csv 文件会在 .Save 目录下生成.
+保存的 tsv 文件会在 .save 目录下生成.
 
 ## 运行效果
 
@@ -34,4 +34,4 @@ python src/trakt.py
 ## 注意事项
 
 1. 请确保你的网络环境可以访问 IMDb 和 Trakt 网站.
-2. .Cache 目录下的缓存文件是为了减少对 IMDb 和 Trakt 网站的请求次数而生成的. 如果你想要重新爬取数据, 请删除 .Cache 目录下的所有文件.
+2. .cache 目录下的缓存文件是为了减少对 IMDb 和 Trakt 网站的请求次数而生成的. 如果你想要重新爬取数据, 请删除 .cache 目录下的所有文件.
