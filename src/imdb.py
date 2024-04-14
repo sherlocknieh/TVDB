@@ -80,7 +80,7 @@ def get_episode_info(movie):
     # 获取各集评分
     episodes = []
     # 先添加影片总体信息
-    episodes.append({'date':episode_date, 'season':season_number, 'ep':episode_number , 'name':movie['name'], 'rating':episode_rating})
+    episodes.append({'date':movie['date'], 'season':'S00', 'ep':'E00' , 'name':movie['name'], 'rating':movie['rating']})
     
     for item in season_list:
         print(f'\n第 {item['season_id']} 季\n')
