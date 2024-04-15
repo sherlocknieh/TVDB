@@ -25,11 +25,11 @@ python src/imdb.py
 ```bash
 python src/trakt.py
 ```
-保存的 tsv 文件会在 .save 目录下生成.
+保存的 csv 文件会在 .save 目录下生成.
 
 ## 运行效果
 
-![1712289691816](image/README/1712289691816.png)
+![1712289691816](doc/image/README/1712289691816.png)
 
 ## 注意事项
 
