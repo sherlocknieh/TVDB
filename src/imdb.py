@@ -6,16 +6,15 @@ import csv
 
 domain = 'https://www.imdb.com'
 
-# 网页下载解析
-def get_html(url,save_name):
+# 网页下载解析: (网址,保存路径)->(html文件,soup)
+def get_html(url,save_path):
     headers = { 'User-Agent':
                 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)\
                  AppleWebKit/537.36 (KHTML, like Gecko)\
                  Chrome/122.0.0.0 Safari/537.36 Edg/122.0.0.0' }
     dir_name = '.cache'
     os.mkdir(dir_name) if not os.path.exists(dir_name) else None
-    filepath = dir_name + '/[IMDB] ' + save_name    # 保存路径: .cache/[IMDB] Doctor Who xxx.html
-
+    filepath = dir_name + '/[IMDB] ' + save_path    # 保存路径: .cache/[IMDB] Doctor Who xxx.html
     if not os.path.exists(filepath):    # 同名文件存在则不下载
         response = requests.get(url, headers=headers, timeout=10)
         if response.status_code != 200:
@@ -27,13 +26,14 @@ def get_html(url,save_name):
         soup = BeautifulSoup(f.read(), 'lxml')
     return soup
 
-# 搜索影片
+# 搜索影片: (片名)->(搜索结果列表)
 def search_movie(search_name):
+    print()
     url = domain + '/find/?s=tt&q=' + search_name
     soup = get_html(url, f'{search_name} Search Result.html')           # 搜索并下载结果页
     result_area = soup.select('.ipc-metadata-list-summary-item__tc')    # 提取搜索结果
     result_list = []         
-    for index,item in enumerate(result_area[:10],1):    # 只取前10个结果
+    for index,item in enumerate(result_area[:9],1):    # 只取前9个结果
         name = item.a.get_text()            # 获取片名: Doctor Who
         tt = item.a['href'].split('/')[2]   # 获取tt号: tt0436992
         url = domain + '/title/' + tt       # 获取干净的影片链接: https://www.imdb.com/title/tt0436992
@@ -44,35 +44,36 @@ def search_movie(search_name):
         if year:    year = year.get_text()      # 获取年份 2005
         else:       year = 'N/A'                # 无年份信息
         title = f'{name} ({type_} {year})'      # 合成标题: Doctor Who (TV Series 2005)
-        # 打印信息
-        print(f'{index}. {title}')
-        # 保存信息
+    # 打印信息
+        print(f'  {index}. {title}')
+    # 保存信息
         result_list.append({'name':name, 'type':type_ , 'year':year, 'url':url, 'title':title})
+    print()
     return result_list
 
-# 选择影片
+# 选择影片: (搜索结果列表,编号)->(影片详情)
 def get_movie(result_list, n):
+    if n == 0:exit() # 退出
     movie = result_list[n-1]
-    print(movie["title"],end=' ')       # Doctor Who (Series 2005)
     soup = get_html(movie['url'], movie["title"]+'.html') # 下载影片详情页
     rating = soup.select_one('span.cMEQkK').get_text()  # 获取影片总评分
-    
-    date = soup.find('a',string=re.compile("Release date")).parent.stripped_strings # 获取日期
-    date = list(date)[-1]   # 转换为列表, 取最后一个元素
-    print(f'日期: {date} 评分: {rating}') # Doctor Who (Series 2005) 日期: 2005– 评分: 8.6
-
+    date = soup.find('a',string=re.compile("Release date")).parent.stripped_strings # 获取日期 # ["Release date", "March 26, 2005 (United Kingdom)"]
+    date = date_format(list(date)[-1].split('(')[0],2)       # 提取日期: # March 26, 2005 -> 2005-03-26
     movie['rating'] = rating    # 添加评分信息
     movie['date'] = date        # 添加日期信息
 
+    print(f'\n{movie["title"]}')       # Doctor Who (Series 2005)
+    print(f'日期: {date}')      # 日期: 2005– 评分: 8.6
+    print(f'评分: {rating}')    # 评分: 8.6
     return movie    # 返回选择的影片
 
-# 获取各集信息
+# 获取每集信息: (影片详情)->(各集信息数据)
 def get_episode_info(movie):
     if movie['type'] == 'Movie':
         return
     url = movie['url'] + '/episodes'    # https://www.imdb.com/title/tt0436992/episodes
-    save_name = movie['name'] + ' Seasons.html' # Doctor Who Seasons.html
-    soup = get_html(url, save_name)
+    save_path = movie['name'] + ' Seasons.html' # Doctor Who Seasons.html
+    soup = get_html(url, save_path)
     # 获取季数
     season_list = soup.select('ul[role=tablist]')[1].select('a')
     season_list = [{'season_id':item.get_text(), 'url':domain+item['href']} for item in season_list] # [{'season_id': '1', 'url': 'https://www.imdb.com/title/tt0436992/episodes?season=1'}, ...]
@@ -113,85 +114,96 @@ def get_episode_info(movie):
             else:   # 评分不存在
                 episode_rating = 'N/A'
         # 打印信息
-            print(f'({episode_date}) {season_number} {episode_number} {episode_name} (评分: {episode_rating})')
+            print(f'  [{episode_date}] {season_number} {episode_number} {episode_name} (评分: {episode_rating})')
         # 保存信息
             episodes.append({'date':episode_date, 'season':season_number, 'ep':episode_number , 'name':episode_name, 'rating':episode_rating})
     return episodes
 
-# 保存各集数据
+# 保存数据: (各集信息数据)->(csv文件)
 def save_data(episodes):
     if not os.path.exists('.save'):
         os.mkdir('.save')
-    save_path = ".save/" +'[IMDB] '+  movie['title'] + ' Episodes.tsv' # 保存路径: .Save/Doctor Who (Series 2005) Episodes.csv
+    save_path = ".save/" +'[IMDB] '+  movie['title'] + ' Episodes.csv' # 保存路径: .Save/Doctor Who (Series 2005) Episodes.csv
     with open(save_path, 'w', encoding='utf-8', newline='') as f:
         writer = csv.DictWriter(f, fieldnames=['season', 'ep', 'name', 'date', 'rating'], delimiter='\t')
         writer.writeheader()
         writer.writerows(episodes)
-    print('数据已保存到 .save 目录下的 tsv 文件')
+    print('\n数据已保存到 .save 目录下的 csv 文件\n')
 
 # 格式化日期
-def date_format(date):
-
-    month_dict = {'Jan':'01', 'Feb':'02', 'Mar':'03', 'Apr':'04', 'May':'05', 'Jun':'06',
-                  'Jul':'07', 'Aug':'08', 'Sep':'09', 'Oct':'10', 'Nov':'11', 'Dec':'12'}
-    # 原始格式: Sat, Oct 7, 2018
-    data = date.strip().replace(',', '') # 去除前后空白字符(换行符之类的), 替换逗号为空格
-    list = data.split(' ') # 分割字符串 ['Sat', 'Oct', '7', '2018']
-    month = month_dict[list[1]] # 月份转换为数字: 10
-    day = list[2].zfill(2)  # 天数补零: 07
-    year = list[3]  # 年份: 2018
+def date_format(date, type=1):
+    # 原始格式1: Sat, Oct 7, 2018
+    # 原始格式2: March 26, 2005
     # 目标格式: 2018-10-07
+    month_dict1 = {'Jan':'01', 'Feb':'02', 'Mar':'03', 'Apr':'04', 'May':'05', 'Jun':'06',
+                  'Jul':'07', 'Aug':'08', 'Sep':'09', 'Oct':'10', 'Nov':'11', 'Dec':'12'}
+    month_dict2 = {'January':'01', 'February':'02', 'March':'03', 'April':'04', 'May':'05', 'June':'06',
+                  'July':'07', 'August':'08', 'September':'09', 'October':'10', 'November':'11', 'December':'12'}
+    
+    list = date.strip().replace(',', '').split(' ') # 分割字符串 ['Sat', 'Oct', '7', '2018'] 或者 ['March', '26', '2005']
+    year = list[-1]  # 年份: 2018
+    day = list[-2].zfill(2)  # 天数补零: 07
+    if type == 1:
+        month = month_dict1[list[-3]] # 月份转换为数字: 10
+    if type == 2:
+        month = month_dict2[list[-3]] # 月份转换为数字: 03
     return f'{year}-{month}-{day}'    
 
-# 读取历史记录
+# 加载搜索历史
 def load_history():
-    if not os.path.exists('.cache/history.txt'):  # 如果没有记录, 则设置为默认值
-        last_search = 'Doctor Who'
-        last_choice = 1
-    else:
+    # 格式: 片名|编号
+    if os.path.exists('.cache/history.txt'):
         with open('.cache/history.txt', 'r', encoding='utf-8') as f:
-            # 记录格式 "Doctor Who | 1"
-            history = f.read().split('|')
-            last_search = history[0].strip()
-            last_choice = int(history[1].strip())
-    return last_search, last_choice
-# 保存历史记录
-def save_history(search_name, choice):
-    os.mkdir('.cache') if not os.path.exists('.cache') else None
-    with open('.cache/history.txt', 'w', encoding='utf-8') as f:
-        f.write(f'{search_name} | {choice}\n')
+            history = f.read()
+        if '|' in history:
+            name = history.split('|')[0].strip()
+            index = history.split('|')[1].strip()
+            return {'name':name, 'index':index}
+    return None
 
+# 输入处理
+def safe_input(type,hint=''):
+    text = input(hint).strip()      # 输入文本, 去除首尾空白
+    name = 'Doctor Who'    # 默认搜索片名
+    index = '1'            # 默认选择编号
+    hint = "执行默认值"              # 默认提示信息
+    
+    history = load_history()        # 加载历史记录
+    if history:                     # 历史记录有效
+        name = history['name']
+        index = history['index']
+        hint = '执行上次输入'
+
+    if type == 1:                  # 搜索的是片名
+        if not text:               # 输入为空
+            print(f'输入无效, {hint}: {name}')
+        else:
+            name = text
+            # 更新历史记录
+            os.mkdir('.cache') if not os.path.exists('.cache') else None
+            with open('.cache/history.txt', 'w', encoding='utf-8') as f:
+                f.write(f'{name}|{index}')
+        return name
+
+    if type == 2:                   # 选择影片
+        if text.isdigit():
+            index = int(text)
+            if 0 <= index <= 9:
+                # 更新历史记录
+                os.mkdir('.cache') if not os.path.exists('.cache') else None
+                with open('.cache/history.txt', 'w', encoding='utf-8') as f:
+                    f.write(f'{name}|{index}')
+                return index
+        print(f'输入无效, {hint}: {index}')
+        return int(index)
 
 if __name__ == '__main__':
-    last_search,last_choice = load_history()    # 加载历史搜索记录
 
-    search_name = input('输入搜索关键词: ')      # 搜索影片
-    if not search_name:   # 无输入则使用上次搜索关键词
-        search_name = last_search
-        print(f'无效输入, 加载上次搜索: {last_search}')
-
-    print()
-    search_result = search_movie(search_name)  # 获取搜索结果
-    print()
-
-    choice = input('输入编号选择影片: ')    # 选择影片
-    if choice and int(choice) in range(1,11):
-        choice = int(choice)
-    else:
-        print(f'无效输入, 加载上次选择: {last_choice}')
-        choice = last_choice
-
-    print()
-    movie  = get_movie(search_result,choice)   # 获取影片信息
-
-
-    save_history(search_name, choice)    # 保存本次搜索记录
-
-    if movie['type'] == 'Movie': exit() # 如果是电影则退出
-
-    print()
-    episodes = get_episode_info(movie) # 获取各集信息
-
-    print()
-    save_data(episodes) # 保存数据
+    search_name = safe_input(1,'输入片名进行搜索: ')     # 输入片名
+    search_result = search_movie(search_name)           # 获取搜索结果, 并显示
+    choice = safe_input(2,'输入编号选择影片: ')          # 输入编号
+    movie  = get_movie(search_result,choice)            # 获取影片详情
+    if movie['type'] == 'Movie':exit()                  # 如果是剧集则继续, 否则退出
+    episodes = get_episode_info(movie)                  # 获取各集信息, 并显示
+    save_data(episodes)                                 # 保存各集数据
 
