@@ -16,7 +16,7 @@ def get_html(url,save_path):
     os.mkdir(dir_name) if not os.path.exists(dir_name) else None
     filepath = dir_name + '/[IMDB] ' + save_path    # 保存路径: .cache/[IMDB] Doctor Who xxx.html
     if not os.path.exists(filepath):    # 同名文件存在则不下载
-        response = requests.get(url, headers=headers, timeout=10)
+        response = requests.get(url, headers=headers, timeout=30)
         if response.status_code != 200:
             print('下载失败')
             exit()
@@ -87,10 +87,11 @@ def get_episode_info(movie):
         print(f'\n第 {item['season_id']} 季\n')
         soup = get_html(item['url'], f'{movie["name"]} Season {item['season_id']}.html') 
         episode_list = soup.select_one('section.sc-7b9ed960-0.jNjsLo')
-        for episode in episode_list:
+
+        for episode in episode_list.select('.episode-item-wrapper'):
         # 标题解析
-            episode_title = episode.h4.select_one('a').get_text()
-            if item['season_id'] == 'Unknown': # 特殊季集 # The Next Doctor 
+            episode_title = episode.h4.select_one('a').get_text() # 获取标题: S1.E1 ∙ Rose
+            if item['season_id'] == 'Unknown': # 特殊季集 # The Next Doctor
                 season_number = '00'
                 episode_number = '00'
                 episode_name = episode_title
@@ -99,24 +100,25 @@ def get_episode_info(movie):
                 episode_number = 'E'+episode_title.split(' ∙ ')[0].split('.')[1][1:].zfill(2) # 集数 E1 -> E01
                 episode_name = episode_title.split(' ∙ ')[1] # 集名 Yesterday's Jam
         # 日期解析
-            episode_date = list(episode.h4.parent.stripped_strings) # 正常情况 # ["S1.E1 ∙ Rose", "Sat, Mar 26, 2005"]
-            if len(episode_date) == 1:      # 没有日期
+            episode_date = list(episode.h4.parent.stripped_strings) 
+            if len(episode_date) == 1:      # 没有日期的情况
                 episode_date = 'N/A'
-            else:
-                episode_date = list(episode_date)[1] # "Sat, Mar 26, 2005"
+            else:       # 正常情况 # ["S1.E1 ∙ Rose", "Sat, Mar 26, 2005"]
+                episode_date = list(episode_date)[1].strip() # "Sat, Mar 26, 2005"
             if len(episode_date) > 4: # 有的日期只有年份, 则不用格式化
                 episode_date = date_format(episode_date) # 格式化日期: 2018-10-07
         # 评分解析
             episode_rating = episode.select_one('span.ipc-rating-star') # 查找评分信息
             if episode_rating:  # 评分存在
                 episode_rating = episode_rating.get_text() # 获取评分: 8.5/10(1.5k)
+                rating_count = episode_rating.split('(')[1].split(')')[0] # 提取评分人数: 1.5k
                 episode_rating = episode_rating.split('/')[0] # 只保留评分: 8.5
             else:   # 评分不存在
                 episode_rating = 'N/A'
         # 打印信息
             print(f'  [{episode_date}] {season_number} {episode_number} {episode_name} (评分: {episode_rating})')
         # 保存信息
-            episodes.append({'date':episode_date, 'season':season_number, 'ep':episode_number , 'name':episode_name, 'rating':episode_rating})
+            episodes.append({'date':episode_date, 'season':season_number, 'ep':episode_number , 'name':episode_name, 'rating':episode_rating, 'rating_count':rating_count})
     return episodes
 
 # 保存数据: (各集信息数据)->(csv文件)
@@ -125,7 +127,7 @@ def save_data(episodes):
         os.mkdir('.save')
     save_path = ".save/" +'[IMDB] '+  movie['title'] + ' Episodes.csv' # 保存路径: .Save/Doctor Who (Series 2005) Episodes.csv
     with open(save_path, 'w', encoding='utf-8', newline='') as f:
-        writer = csv.DictWriter(f, fieldnames=['season', 'ep', 'name', 'date', 'rating'], delimiter='\t')
+        writer = csv.DictWriter(f, fieldnames=['season', 'ep', 'name', 'date', 'rating','rating_count'], delimiter='\t')
         writer.writeheader()
         writer.writerows(episodes)
     print('\n数据已保存到 .save 目录下的 csv 文件\n')
@@ -141,10 +143,13 @@ def date_format(date, type=1):
                   'July':'07', 'August':'08', 'September':'09', 'October':'10', 'November':'11', 'December':'12'}
     
     list = date.strip().replace(',', '').split(' ') # 分割字符串 ['Sat', 'Oct', '7', '2018'] 或者 ['March', '26', '2005']
+
     year = list[-1]  # 年份: 2018
+    if len(list) < 3: return f'{year}-01-01' # 无月份信息, 默认为1月1日
     day = list[-2].zfill(2)  # 天数补零: 07
     if type == 1:
-        month = month_dict1[list[-3]] # 月份转换为数字: 10
+        month = month_dict1.get(list[-3]) # 月份转换为数字: 10
+        if not month: print(f'日期格式错误:{list}')
     if type == 2:
         month = month_dict2[list[-3]] # 月份转换为数字: 03
     return f'{year}-{month}-{day}'    

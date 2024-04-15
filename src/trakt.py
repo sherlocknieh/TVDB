@@ -12,7 +12,7 @@ def get_html(url,save_name):
     os.mkdir(dir_name) if not os.path.exists(dir_name) else None
     filepath = dir_name + '/[Trakt] ' + save_name
     if not os.path.exists(filepath):
-        response = requests.get(url, headers=headers, timeout=10)
+        response = requests.get(url, headers=headers, timeout=30)
         if response.status_code != 200:
             print('下载失败')
             exit()
