@@ -7,16 +7,17 @@
 
 ## Usage 使用方法
 
-需要安装 Python 来运行该项目.
+1.需要安装 Python:
+
 项目的原始开发环境是 Python 3.12.2.
 所以建议安装接近 Python 3.12.2 的版本.
 
-安装依赖:
+2.需要安装依赖:
 ```bash
 pip install -r requirements.txt
 ```
 
-运行项目:
+3.运行项目:
 ```bash
 python src/imdb.py
 ```

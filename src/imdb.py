@@ -115,6 +115,7 @@ def get_episode_info(movie):
                 episode_rating = episode_rating.split('/')[0] # 只保留评分: 8.5
             else:   # 评分不存在
                 episode_rating = 'N/A'
+                rating_count = '0'
         # 打印信息
             print(f'  [{episode_date}] {season_number} {episode_number} {episode_name} (评分: {episode_rating})')
         # 保存信息
