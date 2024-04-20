@@ -86,9 +86,9 @@ def get_episode_info(movie):
     for item in season_list:
         print(f'\n第 {item['season_id']} 季\n')
         soup = get_html(item['url'], f'{movie["name"]} Season {item['season_id']}.html') 
-        episode_list = soup.select_one('section.sc-7b9ed960-0.jNjsLo')
+        episode_list = soup.select('.episode-item-wrapper')
 
-        for episode in episode_list.select('.episode-item-wrapper'):
+        for episode in episode_list:
         # 标题解析
             episode_title = episode.h4.select_one('a').get_text() # 获取标题: S1.E1 ∙ Rose
             if item['season_id'] == 'Unknown': # 特殊季集 # The Next Doctor
