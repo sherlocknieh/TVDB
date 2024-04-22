@@ -15,6 +15,8 @@ def get_html(url,save_path):
     dir_name = '.cache'
     os.mkdir(dir_name) if not os.path.exists(dir_name) else None
     filepath = dir_name + '/[IMDB] ' + save_path    # 保存路径: .cache/[IMDB] Doctor Who xxx.html
+    filepath = filepath.replace(':','')  # 文件名不能含有冒号
+
     if not os.path.exists(filepath):    # 同名文件存在则不下载
         response = requests.get(url, headers=headers, timeout=30)
         if response.status_code != 200:
@@ -127,11 +129,12 @@ def save_data(episodes):
     if not os.path.exists('.save'):
         os.mkdir('.save')
     save_path = ".save/" +'[IMDB] '+  movie['title'] + ' Episodes.csv' # 保存路径: .Save/Doctor Who (Series 2005) Episodes.csv
+    save_path = save_path.replace(':','') # 文件名不能含有冒号
     with open(save_path, 'w', encoding='utf-8', newline='') as f:
         writer = csv.DictWriter(f, fieldnames=['season', 'ep', 'name', 'date', 'rating','rating_count'], delimiter='\t')
         writer.writeheader()
         writer.writerows(episodes)
-    print('\n数据已保存到 .save 目录下的 csv 文件\n')
+    print(f'\n已保存到: {save_path}\n')
 
 # 格式化日期
 def date_format(date, type=1):

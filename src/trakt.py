@@ -11,6 +11,7 @@ def get_html(url,save_name):
     dir_name = '.cache'
     os.mkdir(dir_name) if not os.path.exists(dir_name) else None
     filepath = dir_name + '/[Trakt] ' + save_name
+    filepath = filepath.replace(':','')    # 文件名不能包含冒号
     if not os.path.exists(filepath):
         response = requests.get(url, headers=headers, timeout=30)
         if response.status_code != 200:
@@ -82,6 +83,7 @@ def get_episodes(selection):
 
 def save_episodes(selection,episodes):
     save_path = '.save'+ '/[Trakt] '+ selection['title'] + ' Episodes.csv' # 保存路径: .save/[Trakt] Doctor Who (Series 2005) Episodes.csv
+    save_path = save_path.replace(':','')    # 文件名不能包含冒号
     with open(save_path, 'w', encoding='utf-8', newline='') as f:
         writer = csv.DictWriter(f, fieldnames=episodes[0].keys(), delimiter='\t')
         writer.writeheader()
