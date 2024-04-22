@@ -71,7 +71,7 @@ def get_episodes(selection):
     for episode in all_episodes:
         season_ep = episode.select_one('.main-title-sxe').get_text()
         name = episode.select_one('.titles').meta['content']
-        rating = episode.select_one('.percentage').get_text().strip()
+        rating = episode.select_one('.percentage').get_text().strip().replace('%', '')
         date = episode.select_one('.convert-date.relative-date-swap')
         date = date.get_text().split('T')[0] if date else '未知日期'        
         minutes = episode.select_one('.humanized-minutes')['data-full-minutes']
