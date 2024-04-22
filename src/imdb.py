@@ -83,7 +83,7 @@ def get_episode_info(movie):
     # 获取各集评分
     episodes = []
     # 先添加影片总体信息
-    episodes.append({'date':movie['date'], 'season':'S00', 'ep':'E00' , 'name':movie['name'], 'rating':movie['rating']})
+    episodes.append({'date':movie['date'], 'episode':'S00E00' , 'name':movie['name'], 'rating':movie['rating']})
     
     for item in season_list:
         print(f'\n第 {item['season_id']} 季\n')
@@ -119,9 +119,9 @@ def get_episode_info(movie):
                 episode_rating = 'N/A'
                 rating_count = '0'
         # 打印信息
-            print(f'  [{episode_date}] {season_number} {episode_number} {episode_name} (评分: {episode_rating})')
+            print(f'  [{episode_date}] {season_number}{episode_number} {episode_name} (评分: {episode_rating})')
         # 保存信息
-            episodes.append({'date':episode_date, 'season':season_number, 'ep':episode_number , 'name':episode_name, 'rating':episode_rating, 'rating_count':rating_count})
+            episodes.append({'date':episode_date, 'episode':season_number+episode_number , 'name':episode_name, 'rating':episode_rating, 'rating_count':rating_count})
     return episodes
 
 # 保存数据: (各集信息数据)->(csv文件)
@@ -131,7 +131,7 @@ def save_data(episodes):
     save_path = ".save/" +'[IMDB] '+  movie['title'] + ' Episodes.csv' # 保存路径: .Save/Doctor Who (Series 2005) Episodes.csv
     save_path = save_path.replace(':','') # 文件名不能含有冒号
     with open(save_path, 'w', encoding='utf-8', newline='') as f:
-        writer = csv.DictWriter(f, fieldnames=['season', 'ep', 'name', 'date', 'rating','rating_count'], delimiter='\t')
+        writer = csv.DictWriter(f, fieldnames=['episode', 'name', 'date', 'rating','rating_count'], delimiter='\t')
         writer.writeheader()
         writer.writerows(episodes)
     print(f'\n已保存到: {save_path}\n')
