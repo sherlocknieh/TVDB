@@ -94,8 +94,8 @@ def get_episode_info(movie):
         # 标题解析
             episode_title = episode.h4.select_one('a').get_text() # 获取标题: S1.E1 ∙ Rose
             if item['season_id'] == 'Unknown': # 特殊季集 # The Next Doctor
-                season_number = '00'
-                episode_number = '00'
+                season_number = 'S00'
+                episode_number = 'E00'
                 episode_name = episode_title
             else:   # 正常情况
                 season_number = 'S'+episode_title.split(' ∙ ')[0].split('.')[0][1:].zfill(2) # 季数 S1 -> S01
@@ -110,7 +110,7 @@ def get_episode_info(movie):
             if len(episode_date) > 4: # 有的日期只有年份, 则不用格式化
                 episode_date = date_format(episode_date) # 格式化日期: 2018-10-07
         # 评分解析
-            episode_rating = episode.select_one('span.ipc-rating-star') # 查找评分信息
+            episode_rating = episode.select_one('.ipc-rating-star--imdb') # 查找评分信息
             if episode_rating:  # 评分存在
                 episode_rating = episode_rating.get_text() # 获取评分: 8.5/10(1.5k)
                 rating_count = episode_rating.split('(')[1].split(')')[0] # 提取评分人数: 1.5k
