@@ -21,11 +21,11 @@ pip install -r requirements.txt
 
 3.运行项目:
 ```bash
-python src/imdb.py
+python ./imdb.py
 ```
 或者
 ```bash
-python src/trakt.py
+python ./trakt.py
 ```
 生成的 csv 文件在 .save 目录下.
 
