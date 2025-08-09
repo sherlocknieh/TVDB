@@ -54,8 +54,8 @@ def export_to_csv(info):
     slug = info['ids']['slug']
     target = f'{slug}.csv'
 
+    print(f'导出总体信息: {target}')
     details = check(f'{slug}/details.json', raise_error=True)
-
     trakt = details['trakt']
     imdb = details['imdb']
 
@@ -77,6 +77,7 @@ def export_to_csv(info):
         'trakt_votes': trakt['votes'],
         'imdb_rating': imdb['imdbRating'],
         'imdb_votes': imdb['imdbVotes'].replace(',', ''),
+        'overview': trakt['overview'],
         'link': f'https://trakt.tv/{_type}s/{slug}'
     }
     dump([movie_show], target)
@@ -85,6 +86,7 @@ def export_to_csv(info):
     if info['type'] == 'movie': return
 
     # 处理剧集
+    print(f'导出剧集信息: {target}')
     season_list = []
     episode_list = []
 
@@ -125,10 +127,10 @@ def export_to_csv(info):
                     'imdb_votes': extras['imdbVotes'],
                     'link': f'https://trakt.tv/episodes/{episode["ids"]['trakt']}'
                 })
-            except KeyError:
-                print(f"{slug}/season{season['number']}/episode{episode['number']} 数据缺失")
-    dump(season_list, target)
-    dump(episode_list, target)
+            except KeyError as e:
+                print(f"{slug}.season{season['number']}.episode{episode['number']} 缺少数据: {e}")
+
+    dump(season_list +episode_list, target)
     print(f"导出完成: {target}")
 
 
