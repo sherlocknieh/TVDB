@@ -6,37 +6,36 @@ import os
 """FREE (1,000 daily limit)
 """
 
-def get_by_imdb(imdb_id):
-
-    response = httpx.get(f'http://www.omdbapi.com/?i={imdb_id}&apikey=8b3ccd6b')
-
+async def get_by_imdb(client, imdb_id):
+    response = await client.get(f'http://www.omdbapi.com/?i={imdb_id}&apikey=8b3ccd6b')
     if response.status_code == 200:
-        data = response.json()
-        with open(f'{imdb_id}.json', 'w') as f:
-            json.dump(data, f, indent=4)
-        return data
+        return response.json()
     else:
-        return None
+        raise Exception(f'Error: {response.status_code}')
 
-async def get_by_title(title):
 
-    response = await httpx.AsyncClient().get(f'http://www.omdbapi.com/?t={title}&apikey=8b3ccd6b')
 
+async def get_by_title(client, title):
+    response = await client.get(f'http://www.omdbapi.com/?t={title}&apikey=8b3ccd6b')
     if response.status_code == 200:
-        data = response.json()
-        return data
+        return response.json()
     else:
-        return None
+        raise Exception(f'Error: {response.status_code}')
+
+
 
 async def main():
-
     imdb_id = 'tt1375666'
-    data = await get_by_imdb(imdb_id)
-    print(json.dumps(data, indent=4))
-
     title = 'Community'
-    data = await get_by_title(title)
-    print(json.dumps(data, indent=4))
+    async with httpx.AsyncClient() as client:
+        tasks = [
+            asyncio.create_task(get_by_imdb(client, imdb_id)),
+            asyncio.create_task(get_by_title(client, title))
+        ]
+        responses = await asyncio.gather(*tasks)
+        for response in responses:
+            print(json.dumps(response, indent=4))
+
 
 if __name__ == '__main__':
     asyncio.run(main())

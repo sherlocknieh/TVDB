@@ -1,9 +1,9 @@
-
 import asyncio
 import httpx
-import json
-import os
-import csv
+import time
+
+from API.Tools import dump, check
+
 
 """Trakt API 限制: 1000 calls every 5 minutes"""
 
@@ -16,189 +16,134 @@ HEADERS = {
 }
 
 
+
 def search(name):
-    r = httpx.get("https://api.trakt.tv/search/show,movie", headers=HEADERS, params={"query": name})
+    print(f"正在搜索 {name}...")
 
-    if r.status_code == 200:
-        data = r.json()
-        for i, item in enumerate(data):
-            _type = item["type"]
-            info = item[_type]
-            title = info["title"]
-            year = info["year"]
-            ids = info["ids"]
-            print(f"{i}. {title} {year} ({_type.capitalize()}) https://trakt.tv/shows/{ids['trakt']}/")
+    target = f"search.{name}.json"
+    result = check(target)
+    if not result:
 
-        index_str = input("选择序号：")
-        index = int(index_str) if index_str.strip().isdigit() else 0
-        return data[index]
-    else:
-        print(f"Error fetching data for {name}: {r.status_code}")
-        return None
-    
+        r = httpx.get("https://api.trakt.tv/search/show,movie", headers=HEADERS, params={"query": name})
+        if r.status_code == 200:
+            result = r.json()
+            dump(result, target)
+        else:
+            raise Exception(f"HTTP Error: {r.status_code}")
 
-async def fetch_all(item):
-    _type = item["type"]
-    imdb_id = item[_type]["ids"]["imdb"]
-    # 建立异步客户端
+    for i, item in enumerate(result):
+        _type = item["type"]
+        info = item[_type]
+        title = info["title"]
+        year = info["year"]
+        ids = info["ids"]
+        print(f"{i}. [{_type.capitalize()}] {title} ({year}) \t https://trakt.tv/{_type}s/{ids['slug']}/")
+
+    index_str = input("选择序号：")
+    index = int(index_str) if index_str.strip().isdigit() else 0
+    data = result[index]
+    _type = data["type"]
+    info = {"type": _type, **data[_type]}
+    slug = info["ids"]["slug"]
+    dump(info, f'{slug}/basics.json')
+    return info
+
+
+
+async def fetch_all(info):
+    start_time = time.time()
     async with httpx.AsyncClient() as client:
-        response = await client.get(f'http://www.omdbapi.com/?i={imdb_id}&apikey=8b3ccd6b')
-        return response.json()
+        tasks = [fetch_details(client, info)]
+        if info["type"] == "show":
+            tasks.append(fetch_seasons(client, info))
+        await asyncio.gather(*tasks)
+    end_time = time.time()
+    print(f"抓取完成 耗时: {end_time - start_time:.2f}s")
 
 
 
+async def fetch_details(client, info):
+    imdb = info["ids"]["imdb"]
+    slug = info["ids"]["slug"]
 
-async def fetch_seasons(client, show_id):
-    r = await client.get(f"https://api.trakt.tv/shows/{show_id}/seasons", headers=HEADERS, params={"extended": "full"})
-    return r.json()
+    target = f"{slug}/details.json"
+    if check(target): return
 
+    tasks = [
+        client.get(f'http://www.omdbapi.com/?i={imdb}&apikey=8b3ccd6b'),
+        client.get(f"https://api.trakt.tv/{info["type"]}s/{slug}", headers=HEADERS, params={"extended": "full"})
+    ]
+    imdb, trakt = await asyncio.gather(*tasks)
 
-
-
-def get_api(url, params=None, filename='latest'):
-    os.mkdir(".cache") if not os.path.exists(".cache") else None
-    url = f"https://api.trakt.tv{url}"
-    response = httpx.get(url, headers=HEADERS, params=params)
-    if response.status_code == 200:
-        with open(f".cache/{filename}.json", "w", encoding="utf-8") as f:
-            json.dump(response.json(), f, ensure_ascii=False, indent=4)
-        return response.json()
+    if imdb.status_code == 200 and trakt.status_code == 200:
+        details = {"imdb": imdb.json(), "trakt": trakt.json()}
+        dump(details, target)
     else:
-        print("error code:", response.status_code)
-        return []
-
-
-def save_csv(data, filename="movies"):
-    print(f"Saving data to {filename}.csv ...")
-    os.mkdir(".save") if not os.path.exists(".save") else None
-
-    file_path = f".save/{filename}.csv"
-    file_exists = os.path.exists(file_path)
-
-
-    with open(f".save/{filename}.csv", "a", encoding="utf-8", newline='') as f:
-        writer = csv.writer(f, delimiter='\t')
-        if not file_exists:
-            writer.writerow(["type", "title", "year", "link", "date", "runtime", "rating", "votes", "director", "writer"])
-        for item in data:
-            trakt_link = f"https://trakt.tv/{item['type']}/{item['ids']['slug']}"
-            writer.writerow([item["type"], item["title"], item["year"], trakt_link, item["date"], item["runtime"], item["rating"], item["votes"], ", ".join(item["director"]), ", ".join(item["writer"])])
+        print(f"Error Fetching {slug}, imdb {imdb.status_code}, trakt {trakt.status_code}")
 
 
 
+async def fetch_seasons(client, info):
+    slug = info["ids"]["slug"]
 
-async def fetch_episodes(client, show_id, season):
-    r = await client.get(f"https://api.trakt.tv/shows/{show_id}/seasons/{season}", headers=HEADERS, params={"extended": "full"})
-    return r.json()
+    target = f"{slug}/seasons.json"
+    seasons = check(target)
 
-async def fetch_people(client, show_id, season, episode):
-    r = await client.get(f"https://api.trakt.tv/shows/{show_id}/seasons/{season}/episodes/{episode}/people", headers=HEADERS)
-    return r.json()
+    if not seasons:
+        r = await client.get(f"https://api.trakt.tv/shows/{slug}/seasons", headers=HEADERS, params={"extended": "full"})
+        if r.status_code == 200:
+            seasons = r.json()
+            dump(seasons, target)
+        else:
+            raise Exception(f"HTTP Error: {r.status_code}")
+
+    tasks = [fetch_episodes(client, info, season) for season in seasons]
+    await asyncio.gather(*tasks)
 
 
 
+async def fetch_episodes(client, info, season):
+    slug = info["ids"]["slug"]
+    _season = season["number"]
 
-def get_details(basics):
+    target = f"{slug}/season{_season}/episodes.json"
+    episodes = check(target)
+
+    if not episodes:
+        r = await client.get(f"https://api.trakt.tv/shows/{slug}/seasons/{_season}", headers=HEADERS, params={"extended": "full"})
+        if r.status_code == 200:
+            episodes = r.json()
+            dump(episodes, target)
+        else:
+            print(f"HTTP Error: {r.status_code}")
+            return
+
+    tasks = [fetch_extras(client, info, season, episode) for episode in episodes]
+    await asyncio.gather(*tasks)
+
+
+
+async def fetch_extras(client, info, season, episode):
+    imdb = episode["ids"]["imdb"]
+    slug = info["ids"]["slug"]
+    _season = season["number"]
+    _episode = episode["number"]
+
+    target = f"{info['title']}/season{_season}/episode{_episode}.json"
+    if check(target): return
+
+    tasks = [
+        client.get(f'http://www.omdbapi.com/?i={imdb}&apikey=8b3ccd6b'),
+        client.get(f"https://api.trakt.tv/shows/{slug}/seasons/{_season}/episodes/{_episode}/people", headers=HEADERS)
+    ]
     
-    _type = basics["type"]
-    info = basics[_type]
-    title = info["title"]
-    year = info["year"]
-    ids = info["ids"]
-    slug = ids["slug"]
-
-    print(f"Fetching {slug} details...")
-    url = f"/{_type}s/{slug}"
-    params = {"extended": "full"}
-    detail = get_api(url, params, slug+"_details")
-
-    if _type == "show":
-        date = detail["first_aired"]
-    else:
-        date = detail["released"]
+    r1, r2 = await asyncio.gather(*tasks)
     
-    runtime = detail["runtime"]
-    rating = detail["rating"]
-    votes = detail["votes"]
-
-
-    print(f"Fetching {slug} peoples...")
-    url = f"/{_type}s/{slug}/people"
-    people = get_api(url, filename=slug+"_peoples")
-
-    directors = []
-    writers = []
-
-    if _type == "movie":
-        for crew_member in people['crew']['directing']:
-            if crew_member['job'] == 'Director':
-                directors.append(crew_member['person']['name'])
-        
-        for crew_member in people['crew']['writing']:
-            writers.append(crew_member['person']['name']+" ("+crew_member['job']+")")
+    if r1.status_code == 200 and r2.status_code == 200:
+        imdb = r1.json()
+        crew = r2.json().get("crew", {})
+        extras = imdb | crew
+        dump(extras, target)
     else:
-        for crew_member in people['crew']["production"]:
-            if crew_member['job'] == 'Executive Producer':
-                writers.append(crew_member['person']['name'])
+        print(f"HTTP Error: {r1.status_code} or {r2.status_code}")
 
-
-    final_result = {
-        "type": _type,
-        "title": title,
-        "year": year,
-        "ids": ids,
-
-        "date": date,
-        "runtime": runtime,
-        "rating" : rating,
-        "votes" : votes,
-
-        "director": directors,
-        "writer" : writers,
-    }
-
-    if _type == "show":
-        save_csv([final_result], filename=title)
-    else:
-        save_csv([final_result])
-
-
-def get_seasons(basics):
-    _type = basics["type"]
-    _id = basics["ids"]["slug"]
-
-    print(f"Fetching {_id} seasons...")
-    url = f"/{_type}s/{_id}/seasons"
-    params = {"extended": "full"}
-
-    seasons = get_api(url, params, _id+"_seasons")
-
-    for season in seasons:
-        season_number = season["number"]
-        season_title = season["title"]
-        season_ids = season["ids"]
-        season_rating = season["rating"]
-        season_votes = season["votes"]
-        first_aired = season["first_aired"]
-        episode_count = season["episode_count"]
-
-
-
-
-def get_episodes(result):
-    _id = result["ids"]["slug"]
-    url = f"/shows/{_id}/seasons/1/episodes"
-    params = {"extended": "full"}
-
-    print(f"Fetching {_id} episodes...")
-    return get_api(url, params, f"{_id}_season_1_episodes")
-
-    url = f"/shows/community/seasons/1/episodes/1/people"
-    get_api(url, filename=f"community_season_1_episode_1_people")
-
-
-if __name__ == "__main__":
-    basics = get_basics('inception')
-    get_details(basics)
-    if basics["type"] == "show":
-        get_seasons(basics)
