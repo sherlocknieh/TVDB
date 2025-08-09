@@ -71,12 +71,12 @@ def export_to_csv(info):
         'title': trakt['title'],
         'date': date,
         'runtime' : trakt['runtime'],
-        'imdb_rating': imdb['imdbRating'],
-        'imdb_votes': imdb['imdbVotes'].replace(',', ''),
-        'trakt_rating': trakt['rating'],
-        'trakt_votes': trakt['votes'],
         'writer': imdb['Writer'],
         'director': imdb['Director'],
+        'trakt_rating': trakt['rating'],
+        'trakt_votes': trakt['votes'],
+        'imdb_rating': imdb['imdbRating'],
+        'imdb_votes': imdb['imdbVotes'].replace(',', ''),
         'link': f'https://trakt.tv/{_type}s/{slug}'
     }
     dump([movie_show], target)
@@ -117,12 +117,12 @@ def export_to_csv(info):
                     'title': episode['title'],
                     'date': episode['first_aired'].split('T')[0],
                     'runtime': episode['runtime'],
+                    'writer':  writer,
+                    'director': director,
                     'trakt_rating': episode['rating'],
                     'trakt_votes': episode['votes'],
                     'imdb_rating': extras['imdbRating'],
                     'imdb_votes': extras['imdbVotes'],
-                    'writer':  writer,
-                    'director': director,
                     'link': f'https://trakt.tv/episodes/{episode["ids"]['trakt']}'
                 })
             except KeyError:
