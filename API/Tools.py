@@ -127,7 +127,7 @@ def export_to_csv(info):
                     'imdb_rating': extras['imdbRating'],
                     'imdb_votes': extras['imdbVotes'],
                     'trakt_link': f'https://trakt.tv/episodes/{episode["ids"]['trakt']}',
-                    'imdb_link' : f'https://www.imdb.com/title/{imdb["imdbID"]}',
+                    'imdb_link' : f'https://www.imdb.com/title/{extras["imdbID"]}',
                     'overview': episode['overview'],
                 })
             except KeyError as e:
