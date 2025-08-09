@@ -77,8 +77,9 @@ def export_to_csv(info):
         'trakt_votes': trakt['votes'],
         'imdb_rating': imdb['imdbRating'],
         'imdb_votes': imdb['imdbVotes'].replace(',', ''),
+        'trakt_link': f'https://trakt.tv/{_type}s/{slug}',
+        'imdb_link' : f'https://www.imdb.com/title/{imdb["imdbID"]}',
         'overview': trakt['overview'],
-        'link': f'https://trakt.tv/{_type}s/{slug}'
     }
     dump([movie_show], target)
 
@@ -101,7 +102,7 @@ def export_to_csv(info):
             'date': season['first_aired'].split('T')[0],
             'trakt_rating': season['rating'],
             'trakt_votes': season['votes'],
-            'link': f'https://trakt.tv/seasons/{season['ids']['trakt']}'
+            'trakt_link': f'https://trakt.tv/seasons/{season['ids']['trakt']}'
         })
 
         episodes = check(f'{slug}/season{season["number"]}/episodes.json', raise_error=True)
@@ -125,7 +126,9 @@ def export_to_csv(info):
                     'trakt_votes': episode['votes'],
                     'imdb_rating': extras['imdbRating'],
                     'imdb_votes': extras['imdbVotes'],
-                    'link': f'https://trakt.tv/episodes/{episode["ids"]['trakt']}'
+                    'trakt_link': f'https://trakt.tv/episodes/{episode["ids"]['trakt']}',
+                    'imdb_link' : f'https://www.imdb.com/title/{imdb["imdbID"]}',
+                    'overview': episode['overview'],
                 })
             except KeyError as e:
                 print(f"{slug}.season{season['number']}.episode{episode['number']} 缺少数据: {e}")
