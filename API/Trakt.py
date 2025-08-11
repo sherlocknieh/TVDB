@@ -129,7 +129,7 @@ async def fetch_extras(client, info, season, episode):
     _season = season["number"]
     _episode = episode["number"]
 
-    target = f"{info['title']}/season{_season}/episode{_episode}.json"
+    target = f"{slug}/season{_season}/episode{_episode}.json"
     if check(target): return
 
     tasks = [
