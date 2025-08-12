@@ -6,7 +6,7 @@ import pandas as pd
 basepath = '.dump'
 
 
-def dump(data, path='new.json'):
+def dump(data, path='new.json', mode='覆盖'):
 
     filepath = os.path.join(basepath, path,)
     filedir = os.path.dirname(filepath)
@@ -20,13 +20,13 @@ def dump(data, path='new.json'):
     
     elif ext == '.csv':
         df = pd.DataFrame(data)
-        # if os.path.exists(filepath):
-        #     # 加载旧数据
-        #     df_old = pd.read_csv(filepath, sep='\t')
-        #     # 合并
-        #     df = pd.concat([df_old, df], ignore_index=True)
-        #     # 去重
-        #     df = df.drop_duplicates()
+        if mode == '追加' and os.path.exists(filepath):
+            # 加载旧数据
+            df_old = pd.read_csv(filepath, sep='\t')
+            # 合并
+            df = pd.concat([df_old, df], ignore_index=True)
+            # 去重
+            df = df.drop_duplicates()
         df.to_csv(filepath, index=False, sep='\t')
 
     else:
@@ -46,7 +46,6 @@ def check(path, raise_error=False):
     if raise_error:
         raise FileNotFoundError(f"未发现 {filepath}")
     else:
-        print(f"未发现 {filepath}")
         return None
 
 
