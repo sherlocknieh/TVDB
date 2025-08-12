@@ -2,7 +2,7 @@ import asyncio
 import httpx
 import time
 
-from API.Tools import dump, check
+from API.Tools import dump, check, load_history
 
 
 """Trakt API 限制: 1000 calls every 5 minutes"""
@@ -18,8 +18,13 @@ HEADERS = {
 
 
 def search(name):
-    print(f"正在搜索 {name}...")
 
+    if not name.strip():
+        history = load_history()
+        name = history.get("name", "")
+        index = history.get("index", 0)
+
+    print(f"正在搜索 {name}...")
     target = f"search.{name}.json"
     result = check(target)
     if not result:
@@ -41,6 +46,7 @@ def search(name):
 
     index_str = input("选择序号：")
     index = int(index_str) if index_str.strip().isdigit() else 0
+    dump({"name": name, "index": index}, 'history.json')
     data = result[index]
     _type = data["type"]
     info = {"type": _type, **data[_type]}

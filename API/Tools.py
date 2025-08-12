@@ -30,7 +30,8 @@ def dump(data, path='new.json'):
         df.to_csv(filepath, index=False, sep='\t')
 
     else:
-        raise ValueError("不支持的格式")
+        with open(filepath, "w", encoding="utf-8") as f:
+            f.write(str(data))
     
     print("已保存:", filepath)
 
@@ -135,6 +136,16 @@ def export_to_csv(info):
 
     dump(season_list +episode_list, target)
     print(f"导出完成: {target}")
+
+
+def load_history():
+    filepath = os.path.join(basepath, 'history.json')
+    if os.path.exists(filepath):
+        with open(filepath, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        return data
+    else:
+        return ({'name': 'sherlock', 'index': 0})
 
 
 if __name__ == '__main__':
