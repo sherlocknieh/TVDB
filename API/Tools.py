@@ -138,7 +138,7 @@ def load_history():
             data = json.load(f)
         return data
     else:
-        return ({'name': 'sherlock', 'index': 0})
+        return ({'name': 'doctor who', 'index': 0})
 
 
 if __name__ == '__main__':
