@@ -54,7 +54,8 @@ def export_to_csv(info):
     slug = info['ids']['slug']
     target = f'{slug}.csv'
 
-    print(f'导出总体信息: {target}')
+    print(f'正在导出: {target}')
+    output_data = []
     details = check(f'{slug}/details.json', raise_error=True)
     trakt = details['trakt']
     imdb = details['imdb']
@@ -64,76 +65,69 @@ def export_to_csv(info):
         date = trakt.get('first_aired').split('T')[0]
 
     # 总体信息
-    movie_show = {
-        'type': _type,
+    output_data.append({
         'season': 0,
         'episode': 0,
         'title': trakt['title'],
-        'date': date,
-        'runtime' : trakt['runtime'],
         'writer': imdb['Writer'],
         'director': imdb['Director'],
         'trakt_rating': trakt['rating'],
+        'trakt_link': f'https://trakt.tv/{_type}s/{slug}',
         'trakt_votes': trakt['votes'],
         'imdb_rating': imdb['imdbRating'],
-        'imdb_votes': imdb['imdbVotes'].replace(',', ''),
-        'trakt_link': f'https://trakt.tv/{_type}s/{slug}',
         'imdb_link' : f'https://www.imdb.com/title/{imdb["imdbID"]}',
+        'imdb_votes': imdb['imdbVotes'].replace(',', ''),
         'overview': trakt['overview'],
-    }
-    dump([movie_show], target)
+        'type': _type,
+        'date': date,
+        'runtime' : trakt['runtime'],
+    })
 
-    # 电影导出结束
-    if info['type'] == 'movie': return
+    if _type == 'show':
 
-    # 处理剧集
-    print(f'导出剧集信息: {target}')
-    season_list = []
-    episode_list = []
+        seasons = check(f'{slug}/seasons.json', raise_error=True)
+        for season in seasons:
 
-    seasons = check(f'{slug}/seasons.json', raise_error=True)
-    for season in seasons:
+            output_data.append({
+                'type': 'season',
+                'season': season['number'],
+                'episode': 0,
+                'title': season['title'],
+                'date': season['first_aired'].split('T')[0],
+                'trakt_rating': season['rating'],
+                'trakt_votes': season['votes'],
+                'trakt_link': f'https://trakt.tv/seasons/{season['ids']['trakt']}'
+            })
 
-        season_list.append({
-            'type': 'season',
-            'season': season['number'],
-            'episode': 0,
-            'title': season['title'],
-            'date': season['first_aired'].split('T')[0],
-            'trakt_rating': season['rating'],
-            'trakt_votes': season['votes'],
-            'trakt_link': f'https://trakt.tv/seasons/{season['ids']['trakt']}'
-        })
+            episodes = check(f'{slug}/season{season["number"]}/episodes.json', raise_error=True)
+            
+            for episode in episodes:
+                extras = check(f'{slug}/season{season["number"]}/episode{episode["number"]}.json', raise_error=True)
+                try:
+                    director = ', '.join(d['person']['name'] for d in extras['directing'])
+                    writer =  ', '.join(w['person']['name'] for w in extras['writing'])
+                    
+                    output_data.append({
+                        'type': 'episode',
+                        'season': season['number'],
+                        'episode': episode['number'],
+                        'title': episode['title'],
+                        'date': episode['first_aired'].split('T')[0],
+                        'runtime': episode['runtime'],
+                        'writer':  writer,
+                        'director': director,
+                        'trakt_rating': episode['rating'],
+                        'trakt_votes': episode['votes'],
+                        'imdb_rating': extras['imdbRating'],
+                        'imdb_votes': extras['imdbVotes'],
+                        'trakt_link': f'https://trakt.tv/episodes/{episode["ids"]['trakt']}',
+                        'imdb_link' : f'https://www.imdb.com/title/{extras["imdbID"]}',
+                        'overview': episode['overview'],
+                    })
+                except KeyError as e:
+                    print(f"{slug}.season{season['number']}.episode{episode['number']} 缺少数据: {e}")
 
-        episodes = check(f'{slug}/season{season["number"]}/episodes.json', raise_error=True)
-        
-        for episode in episodes:
-            extras = check(f'{slug}/season{season["number"]}/episode{episode["number"]}.json', raise_error=True)
-            try:
-                director = ', '.join(d['person']['name'] for d in extras['directing'])
-                writer =  ', '.join(w['person']['name'] for w in extras['writing'])
-                
-                episode_list.append({
-                    'type': 'episode',
-                    'season': season['number'],
-                    'episode': episode['number'],
-                    'title': episode['title'],
-                    'date': episode['first_aired'].split('T')[0],
-                    'runtime': episode['runtime'],
-                    'writer':  writer,
-                    'director': director,
-                    'trakt_rating': episode['rating'],
-                    'trakt_votes': episode['votes'],
-                    'imdb_rating': extras['imdbRating'],
-                    'imdb_votes': extras['imdbVotes'],
-                    'trakt_link': f'https://trakt.tv/episodes/{episode["ids"]['trakt']}',
-                    'imdb_link' : f'https://www.imdb.com/title/{extras["imdbID"]}',
-                    'overview': episode['overview'],
-                })
-            except KeyError as e:
-                print(f"{slug}.season{season['number']}.episode{episode['number']} 缺少数据: {e}")
-
-    dump(season_list +episode_list, target)
+    dump(output_data, target)
     print(f"导出完成: {target}")
 
 
@@ -148,5 +142,5 @@ def load_history():
 
 
 if __name__ == '__main__':
-    info = check('community/basics.json')
+    info = check('superman-lois/basics.json')
     export_to_csv(info)
