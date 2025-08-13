@@ -109,8 +109,8 @@ def export_to_csv(info, debug=True):
                 try:
                     people = check(f'{slug}/season{season["number"]}/episode{episode["number"]}.people.json')
                     imdb = check(f'{slug}/season{season["number"]}/episode{episode["number"]}.imdb.json')
-                    director = ', '.join(d['person']['name'] for d in people['directing'])
-                    writer =  ', '.join(w['person']['name'] for w in people['writing'])
+                    director = ', '.join(d['person']['name'] for d in people['crew']['directing'])
+                    writer =  ', '.join(w['person']['name'] for w in people['crew']['writing'])
                     
                     output_data.append({
                         'type': 'episode',
@@ -122,11 +122,11 @@ def export_to_csv(info, debug=True):
                         'writer':  writer,
                         'director': director,
                         'trakt_rating': episode['rating'],
+                        'trakt_link': f'https://trakt.tv/episodes/{episode["ids"]['trakt']}',
                         'trakt_votes': episode['votes'],
                         'imdb_rating': imdb['imdbRating'],
+                        'imdb_link' : f'https://www.imdb.com/title/{episode["ids"]['imdb']}',
                         'imdb_votes': imdb['imdbVotes'],
-                        'trakt_link': f'https://trakt.tv/episodes/{episode["ids"]['trakt']}',
-                        'imdb_link' : f'https://www.imdb.com/title/{imdb["imdbID"]}',
                         'overview': episode['overview'],
                     })
                 except KeyError as e:

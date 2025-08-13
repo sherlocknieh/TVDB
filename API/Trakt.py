@@ -141,15 +141,9 @@ async def fetch_episodes(client, info, season):
 
 
 async def fetch_people(client, slug, season, episode):
-
-    target = f"{slug}/season{season}/episode{episode}.people.json"
-    if check(target): return
-
-    print(f"🔄️正在抓取: {slug}.season{season}.episode{episode}.people")
     r = await client.get(f"https://api.trakt.tv/shows/{slug}/seasons/{season}/episodes/{episode}/people", headers=HEADERS)
     if r.status_code == 200:
-        people = r.json()
-        dump(people, target)
+        return r.json()
     else:
         raise Exception(f"Trakt:{r.status_code}")
 
@@ -161,17 +155,26 @@ async def fetch_extras(client, info, season, episode):
         _season = season["number"]
         _episode = episode["number"]
 
-        target = f"{slug}/season{_season}/episode{_episode}.json"
-        if check(target): return
+        target = f"{slug}/season{_season}/episode{_episode}.people.json"
+        target2 = f"{slug}/season{_season}/episode{_episode}.imdb.json"
 
-        print(f"🔄️正在抓取: {slug}.season{_season}.episode{_episode}")
+        people_data = check(target)
+        imdb_data = check(target2)
 
-        tasks = [
-            get_by_imdb(client, imdb),
-            fetch_people(client, slug, _season, _episode)
-        ]
+        if people_data and imdb_data: return
+
         try:
-            await asyncio.gather(*tasks)
+            print(f"🔄️正在抓取: {slug}.season{_season}.episode{_episode}")
+            tasks = [
+                fetch_people(client, slug, _season, _episode),
+                get_by_imdb(client, imdb)
+            ]
+            results = await asyncio.gather(*tasks)
+            people, imdb = results[0], results[1]
+
+            dump(people, target)
+            dump(imdb, target2)
+
         except Exception as e:
             print(f"❌抓取失败: {slug}.season{_season}.episode{_episode}: {e}")
 
