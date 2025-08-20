@@ -13,22 +13,21 @@ params = {
     "external_source": "imdb_id"
 }
 
-
+if __name__ != "__main__":
+    from API.Tools import dump
 
 # 通过 TMDB_API 获取电影信息 (用 IMDB_ID 进行搜索)
-def get_details(imdb_id):
+async def get_details(imdb_id, client=None):
 
     endpoint = f"{BASE_URL}/find/{imdb_id}"
-
+    if client is None:
+        client = httpx.AsyncClient(proxy="http://127.0.0.1:7897")
     try:
         print(f"获取影片信息: {imdb_id}")
-        response = httpx.get(endpoint, params=params, proxy="http://127.0.0.1:7897")
+        response = await (client or httpx.AsyncClient()).get(endpoint, params=params)
         if response.status_code == 200:
             data = response.json()
-            print(f"写入缓存文件: {imdb_id}.json")
-            with open(f".dump/{imdb_id}.json", "w", encoding="utf-8") as f:
-                json.dump(data, f, ensure_ascii=False, indent=4)
-            
+            dump(data, path=f"tmdb/{imdb_id}.json")
             # 类型判断
             if data.get('movie_results'):  # 电影
                 data = data['movie_results'][0]
@@ -72,5 +71,7 @@ def get_details(imdb_id):
 
 
 if __name__ == "__main__":
-    result =get_details('tt1475582')
+
+    from Tools import dump
+    result = asyncio.run(get_details('tt1475582'))
     print(json.dumps(result, ensure_ascii=False, indent=4))

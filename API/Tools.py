@@ -3,7 +3,7 @@ import json
 import pandas as pd
 
 
-basepath = '.dump'
+basepath = '.save'
 
 
 def dump(data, path='new.json', mode='覆盖'):
@@ -35,7 +35,6 @@ def dump(data, path='new.json', mode='覆盖'):
     
     print("✅保存成功:", filepath)
 
-
 def check(path, raise_error=False):
     filepath = os.path.join(basepath, path).replace('\\', '/')
     
@@ -47,10 +46,14 @@ def check(path, raise_error=False):
     if raise_error:
         raise FileNotFoundError(f"未发现 {filepath}")
     else:
-        return None
-
+        print(f"❌未发现 {filepath}")
+        return {}
 
 def export_to_csv(info, debug=True):
+    y = input('是否导出全部数据? ([y]/n): ')
+    if y.upper() == 'N':
+        print('取消导出')
+        return
     _type = info['type']
     slug = info['ids']['slug']
     target = f'{slug}.csv'
@@ -59,33 +62,30 @@ def export_to_csv(info, debug=True):
 
     output_data = []
 
-    details = check(f'{slug}/details.json')
-    if details:
-        trakt = details['trakt']
-        imdb = details['imdb']
+    trakt = check(f'{slug}/details.trakt.json')
+    imdb = check(f'{slug}/details.imdb.json')
 
-        date = trakt.get('released')
-        if _type == 'show':
-            date = trakt.get('first_aired').split('T')[0]
+    date = trakt.get('released')
+    if _type == 'show':
+        date = trakt.get('first_aired').split('T')[0]
 
-
-        output_data.append({
-            'season': 0,
-            'episode': 0,
-            'title': trakt['title'],
-            'imdb_rating': imdb['imdbRating'],
-            'imdb_link' : f'https://www.imdb.com/title/{imdb["imdbID"]}',
-            'imdb_votes': imdb['imdbVotes'].replace(',', ''),
-            'trakt_rating': trakt['rating'],
-            'trakt_link': f'https://trakt.tv/{_type}s/{slug}',
-            'trakt_votes': trakt['votes'],
-            'overview': trakt['overview'],
-            'writer': imdb['Writer'],
-            'director': imdb['Director'],
-            'date': date,
-            'runtime' : trakt['runtime'],
-            'type': _type,
-        })
+    output_data.append({
+        'season': 0,
+        'episode': 0,
+        'title': trakt['title'],
+        'imdb_rating': imdb.get('imdbRating'),
+        'imdb_link' : f'https://www.imdb.com/title/{trakt["ids"]["imdb"]}',
+        'imdb_votes': imdb.get('imdbVotes').replace(',', ''),
+        'trakt_rating': trakt['rating'],
+        'trakt_link': f'https://trakt.tv/{_type}s/{slug}',
+        'trakt_votes': trakt['votes'],
+        'overview': trakt['overview'],
+        'writer': imdb.get('Writer'),
+        'director': imdb.get('Director'),
+        'date': date,
+        'runtime' : trakt['runtime'],
+        'type': _type,
+    })
 
     if _type == 'show':
 
@@ -97,7 +97,7 @@ def export_to_csv(info, debug=True):
                 'season': season['number'],
                 'episode': 0,
                 'title': season['title'],
-                'date': season['first_aired'].split('T')[0],
+                'date': season['first_aired'].split('T')[0] if season['first_aired'] else None,
                 'trakt_rating': season['rating'],
                 'trakt_votes': season['votes'],
                 'trakt_link': f'https://trakt.tv/seasons/{season['ids']['trakt']}'
@@ -132,21 +132,23 @@ def export_to_csv(info, debug=True):
                 except KeyError as e:
                     if debug:
                         print(f"❌数据缺失: {slug}.season{season['number']}.episode{episode['number']}: {e}")
+                except TypeError as e:
+                    if debug:
+                        print(f"❌数据缺失: {slug}.season{season['number']}.episode{episode['number']}: {e}")
 
     dump(output_data, target)
 
-
-def load_history():
-    filepath = os.path.join(basepath, 'history.json').replace('\\', '/')
-    if os.path.exists(filepath):
-        with open(filepath, "r", encoding="utf-8") as f:
-            data = json.load(f)
-        return data
-    else:
-        return ({'name': 'doctor who', 'index': 0})
+def load_history_info():
+    history = check('search.history.json', raise_error=True)
+    name = history.get('name')
+    index = history.get('index')
+    result = check(f'search.{name}.json', raise_error=True)
+    data = result[index]
+    _type = data["type"]
+    info = {"type": _type, **data[_type]}
+    return info
 
 
 if __name__ == '__main__':
-    slug = 'sherlock'
-    info = check(f'{slug}/basics.json')
+    info = load_history_info()
     export_to_csv(info)
