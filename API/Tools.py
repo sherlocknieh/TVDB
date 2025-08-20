@@ -75,7 +75,7 @@ def export_to_csv(info, debug=True):
         'title': trakt['title'],
         'imdb_rating': imdb.get('imdbRating'),
         'imdb_link' : f'https://www.imdb.com/title/{trakt["ids"]["imdb"]}',
-        'imdb_votes': imdb.get('imdbVotes').replace(',', ''),
+        'imdb_votes': imdb.get('imdbVotes').replace(',', '') if imdb.get('imdbVotes') else None,
         'trakt_rating': trakt['rating'],
         'trakt_link': f'https://trakt.tv/{_type}s/{slug}',
         'trakt_votes': trakt['votes'],
@@ -109,8 +109,9 @@ def export_to_csv(info, debug=True):
                 try:
                     people = check(f'{slug}/season{season["number"]}/episode{episode["number"]}.people.json')
                     imdb = check(f'{slug}/season{season["number"]}/episode{episode["number"]}.imdb.json')
-                    director = ', '.join(d['person']['name'] for d in people['crew']['directing'])
-                    writer =  ', '.join(w['person']['name'] for w in people['crew']['writing'])
+                    crew = people.get('crew', {})
+                    director = ', '.join(d['person']['name'] for d in crew['directing']) if crew.get('directing') else None
+                    writer =  ', '.join(w['person']['name'] for w in crew['writing']) if crew.get('writing') else None
                     
                     output_data.append({
                         'type': 'episode',
@@ -122,12 +123,12 @@ def export_to_csv(info, debug=True):
                         'writer':  writer,
                         'director': director,
                         'trakt_rating': episode['rating'],
-                        'trakt_link': f'https://trakt.tv/episodes/{episode["ids"]['trakt']}',
                         'trakt_votes': episode['votes'],
-                        'imdb_rating': imdb['imdbRating'],
-                        'imdb_link' : f'https://www.imdb.com/title/{episode["ids"]['imdb']}',
-                        'imdb_votes': imdb['imdbVotes'],
+                        'trakt_link': f'https://trakt.tv/episodes/{episode["ids"]['trakt']}',
                         'overview': episode['overview'],
+                        'imdb_rating': imdb.get('imdbRating'),
+                        'imdb_votes': imdb.get('imdbVotes'),
+                        'imdb_link' : f'https://www.imdb.com/title/{episode["ids"]['imdb']}',
                     })
                 except KeyError as e:
                     if debug:
