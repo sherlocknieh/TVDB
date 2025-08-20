@@ -2,7 +2,7 @@ import asyncio
 import httpx
 
 
-API_KEY = '8b3ccd6b'  # 免费额度: 1000次请求/天
+API_KEY = '8b3ccd6b'  # OMDB API 限制: 1000次请求/天
 
 
 async def fetch_details(client, imdb_id):
@@ -16,7 +16,7 @@ async def fetch_details(client, imdb_id):
 
 async def main():
     import json
-    imdb_id = 'tt1375666'
+    imdb_id = 'tt1375666' # 盗梦空间
     async with httpx.AsyncClient() as client:
         response = await fetch_details(client, imdb_id)
         print(json.dumps(response, indent=4))

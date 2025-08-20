@@ -67,7 +67,7 @@ def export_to_csv(info, debug=True):
 
     date = trakt.get('released')
     if _type == 'show':
-        date = trakt.get('first_aired').split('T')[0]
+        date = trakt.get('first_aired').split('T')[0] if trakt.get('first_aired') else None
 
     output_data.append({
         'season': 0,

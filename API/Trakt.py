@@ -2,9 +2,7 @@ import asyncio
 import httpx
 
 
-"""Trakt API 限制: 1000 calls every 5 minutes
-    OMDB API 限制: 1000 calls every day
-"""
+"""Trakt API 限制: 1000 次请求/5分钟"""
 
 
 HEADERS = {
