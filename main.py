@@ -7,7 +7,10 @@ import API.Trakt as trakt
 import API.OMDB as omdb
 
 
-def search(name=None):
+sem = asyncio.Semaphore(100)
+
+
+async def search(name=None):
     if not name:
         name = input("输入片名: ")
     
@@ -22,8 +25,9 @@ def search(name=None):
     result = tools.check(target)
 
     if not result:
-        result = trakt.search_by_name(name)
-        tools.dump(result, target)
+        async with httpx.AsyncClient() as client:
+            result = await trakt.search_by_name(client, name)
+            tools.dump(result, target)
 
     for i, item in enumerate(result):
         _type = item["type"]
@@ -44,21 +48,21 @@ def search(name=None):
     tools.dump({'name': name, 'index': index}, 'search.history.json')
     return info
 
-async def get_all(basic_info):
+async def get_all(basic):
     start_time = time.time()
     async with httpx.AsyncClient() as client:
-        tasks = [get_details(client, basic_info)]
-        if basic_info["type"] == "show":
-            tasks.append(get_seasons(client, basic_info))
+        tasks = [get_details(client, basic)]
+        if basic["type"] == "show":
+            tasks.append(get_seasons(client, basic))
         await asyncio.gather(*tasks)
     end_time = time.time()
     print(f"抓取结束: 耗时 {end_time - start_time:.2f}s")
 
-async def get_details(client, basic_info):
+async def get_details(client, basic):
     
-    imdb = basic_info["ids"]["imdb"]
-    slug = basic_info["ids"]["slug"]
-    _type = basic_info["type"]
+    imdb = basic["ids"]["imdb"]
+    slug = basic["ids"]["slug"]
+    _type = basic["type"]
 
     target1 = f"{slug}/details.trakt.json"
     target2 = f"{slug}/details.imdb.json"
@@ -69,37 +73,103 @@ async def get_details(client, basic_info):
     # 创建并行任务列表
     tasks = []
     if not result1:
-        tasks.append(trakt.fetch_details(client, slug, _type))
+        tasks.append(trakt.fetch_details(client, imdb, _type))
     if not result2:
         tasks.append(omdb.fetch_details(client, imdb))
 
     # 并发执行所有任务
     if tasks:
-        results = await asyncio.gather(*tasks)
+        results = await asyncio.gather(*tasks, return_exceptions=True)
         
         # 按任务顺序分配结果
         result_idx = 0
         if not result1 and tasks:
             result1 = results[result_idx]
-            tools.dump(result1, target1)
+            if isinstance(result1, Exception):
+                print(f"❌抓取失败: {slug}.details.trakt.json {result1}")
+            else:
+                tools.dump(result1, target1)
             result_idx += 1
         if not result2 and result_idx < len(results):
             result2 = results[result_idx]
-            tools.dump(result2, target2)
+            if isinstance(result2, Exception):
+                print(f"❌抓取失败: {slug}.details.imdb.json {result2}")
+            else:
+                tools.dump(result2, target2)
+
+async def get_seasons(client, basic):
+    slug = basic["ids"]["slug"]
+    target = f"{slug}/seasons.json"
+    seasons = tools.check(target)
+
+    if not seasons:
+        print(f"🔄️正在抓取: {slug}.seasons")
+        try:
+            seasons = await trakt.fetch_seasons(client, slug)
+        except Exception as e:
+            raise Exception(f"❌抓取失败: {slug}.seasons {e}")
+
+    tools.dump(seasons, target)
+
+    tasks = [get_episodes(client, basic, season) for season in seasons]
+    await asyncio.gather(*tasks)
+
+async def get_episodes(client, basic, season):
+    slug = basic["ids"]["slug"]
+    _season = season["number"]
+
+    target = f"{slug}/season{_season}/episodes.json"
+    episodes = tools.check(target)
+
+    if not episodes:
+        print(f"🔄️正在抓取: {slug}.season{_season}.episodes")
+        try:
+            episodes = await trakt.fetch_episodes(client, slug, _season)
+        except Exception as e:
+            print(f"❌抓取失败: {slug}.season{_season}.episodes {e}")
+            return
+
+    tools.dump(episodes, target)
+
+    tasks = [get_extras(client, basic, season, episode) for episode in episodes]
+    await asyncio.gather(*tasks)
+
+async def get_extras(client, basic, season, episode):
+    async with sem:
+        imdb = episode["ids"]["imdb"]
+        slug = basic["ids"]["slug"]
+        _season = season["number"]
+        _episode = episode["number"]
+
+        target = f"{slug}/season{_season}/episode{_episode}.people.json"
+        target2 = f"{slug}/season{_season}/episode{_episode}.imdb.json"
+
+        people_data = tools.check(target)
+        imdb_data = tools.check(target2)
+
+        if people_data and imdb_data: return
+
+        try:
+            print(f"🔄️正在抓取: {slug}.season{_season}.episode{_episode}")
+            tasks = [
+                trakt.fetch_people(client, slug, _season, _episode),
+                omdb.fetch_details(client, imdb)
+            ]
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+            people, imdb = results[0], results[1]
+
+            tools.dump(people, target)
+            tools.dump(imdb, target2)
+
+        except Exception as e:
+            print(f"❌抓取失败: {slug}.season{_season}.episode{_episode}: {e}")
 
 
-
-async def get_seasons(client, basic_info):
-    await trakt.fetch_seasons(client, basic_info)
-
-async def get_episodes(client, basic_info, season):
-    await trakt.fetch_episodes(client, basic_info, season)
-
-async def get_extras(client, basic_info, season, episode):
-    await trakt.fetch_extras(client, basic_info, season, episode)
+async def main():
+    basic = await search('')     # 搜索影片
+    await get_all(basic)         # 抓取信息
+    tools.export_to_csv(basic)   # 导出 CSV
 
 
 if __name__ == "__main__":
-    basic_info = search('')     # 搜索影片
-    asyncio.run(get_all(basic_info))    # 抓取信息
-    tools.export_to_csv(basic_info)     # 导出 CSV
+    asyncio.run(main())

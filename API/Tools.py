@@ -46,7 +46,7 @@ def check(path, raise_error=False):
     if raise_error:
         raise FileNotFoundError(f"未发现 {filepath}")
     else:
-        print(f"❌未发现 {filepath}")
+        #print(f"❌未发现 {filepath}")
         return {}
 
 def export_to_csv(info, debug=True):
