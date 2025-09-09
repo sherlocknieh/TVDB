@@ -27,8 +27,11 @@ async def search(name=None):
     if not result:
         async with httpx.AsyncClient() as client:
             result = await trakt.search_by_name(client, name)
+            if not result:
+                print(f"没有搜索结果, 正在退出")
+                exit(1)
             tools.dump(result, target)
-
+    
     for i, item in enumerate(result):
         _type = item["type"]
         info = item[_type]
