@@ -6,9 +6,11 @@
 
 ## 运行
 
-- 安装 python 3.9+ 和 uv;
+- 安装 python 3.9+
+- 安装 uv: `pip install uv`
 - 安装依赖: `uv sync`
-- 运行程序: `python main.py`。
+- 运行程序: `uv run main.py`
+  
 - 由于网络原因运行报错时, 可以多次运行程序, 程序会自动跳过已爬取的数据。
 - 导出的数据可粘贴到 Excel 中进行分析。
 - 案例: https://docs.qq.com/sheet/DRk1lcU1vZmNHSW9Z?tab=8opemy
