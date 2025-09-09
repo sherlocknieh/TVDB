@@ -40,9 +40,16 @@ def check(path, raise_error=False):
     
     if os.path.exists(filepath):
         with open(filepath, "r", encoding="utf-8") as f:
-            data = json.load(f)
+            try:
+                data = json.load(f)
+            except json.JSONDecodeError:
+                # 如果文件错误/通常是空文件
+                if raise_error:
+                    raise ValueError(f"JSON格式错误: {filepath}")
+                return {}
         return data
     
+    # 如果文件不存在
     if raise_error:
         raise FileNotFoundError(f"未发现 {filepath}")
     else:
@@ -70,22 +77,22 @@ def export_to_csv(info, debug=True):
         date = trakt.get('first_aired').split('T')[0] if trakt.get('first_aired') else None
 
     output_data.append({
+        'type': _type,
         'season': 0,
         'episode': 0,
         'title': trakt['title'],
+        'runtime' : trakt['runtime'],
+        'date': date,
         'imdb_rating': imdb.get('imdbRating'),
         'imdb_link' : f'https://www.imdb.com/title/{trakt["ids"]["imdb"]}',
         'imdb_votes': imdb.get('imdbVotes').replace(',', '') if imdb.get('imdbVotes') else None,
         'trakt_rating': trakt['rating'],
         'trakt_link': f'https://trakt.tv/{_type}s/{slug}',
         'trakt_votes': trakt['votes'],
-        'overview': trakt['overview'],
         'writer': imdb.get('Writer'),
         'director': imdb.get('Director'),
-        'date': date,
-        'runtime' : trakt['runtime'],
-        'type': _type,
-    })
+        'overview': trakt['overview'],
+        })
 
     if _type == 'show':
 
@@ -118,7 +125,7 @@ def export_to_csv(info, debug=True):
                         'season': season['number'],
                         'episode': episode['number'],
                         'title': episode['title'],
-                        'date': episode['first_aired'].split('T')[0],
+                        'date': episode['first_aired'].split('T')[0] if episode['first_aired'] else None,
                         'runtime': episode['runtime'],
                         'writer':  writer,
                         'director': director,
